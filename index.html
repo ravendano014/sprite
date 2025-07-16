@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extractor de Información MRZ</title>
+    <script src="https://cdn.jsdelivr.net/npm/mrz@4.2.1/lib/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .upload-section {
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+        }
+        #imagePreview {
+            max-width: 100%;
+            margin-top: 15px;
+            display: none;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-radius: 5px;
+            display: none;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 15px 0;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Extractor de Información MRZ</h1>
+        <p>Sube una imagen que contenga líneas MRZ (como las de pasaportes o documentos de identidad) para extraer la información.</p>
+        
+        <div class="upload-section">
+            <input type="file" id="imageUpload" accept="image/*" capture="camera">
+            <button id="processBtn" disabled>Procesar Imagen</button>
+            <img id="imagePreview" alt="Vista previa de la imagen">
+        </div>
+        
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Procesando imagen...</p>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageUpload = document.getElementById('imageUpload');
+            const imagePreview = document.getElementById('imagePreview');
+            const processBtn = document.getElementById('processBtn');
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.querySelector('.loading');
+            
+            // Mostrar vista previa de la imagen
+            imageUpload.addEventListener('change', function(e) {
+                if (e.target.files.length === 0) return;
+                
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    imagePreview.src = event.target.result;
+                    imagePreview.style.display = 'block';
+                    processBtn.disabled = false;
+                };
+                
+                reader.readAsDataURL(file);
+            });
+            
+            // Procesar la imagen cuando se hace clic en el botón
+            processBtn.addEventListener('click', function() {
+                if (!imageUpload.files.length) return;
+                
+                loadingDiv.style.display = 'block';
+                resultDiv.style.display = 'none';
+                
+                const file = imageUpload.files[0];
+                
+                // Usar Tesseract.js para extraer texto de la imagen
+                Tesseract.recognize(
+                    file,
+                    'eng',
+                    { logger: m => console.log(m) }
+                ).then(({ data: { text } }) => {
+                    // Procesar el texto extraído para encontrar líneas MRZ
+                    const lines = text.split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 10); // Filtrar líneas muy cortas
+                    
+                    // Intentar parsear las líneas como MRZ
+                    try {
+                        const parsed = mrz.parse(lines);
+                        displayResult(parsed);
+                    } catch (e) {
+                        // Si falla, mostrar el texto crudo para depuración
+                        resultDiv.innerHTML = `
+                            <h3>No se pudo parsear como MRZ válido</h3>
+                            <p>Texto extraído de la imagen:</p>
+                            <pre>${text}</pre>
+                            <p>Error: ${e.message}</p>
+                        `;
+                        resultDiv.style.display = 'block';
+                    }
+                }).finally(() => {
+                    loadingDiv.style.display = 'none';
+                });
+            });
+            
+            // Mostrar los resultados del parseo MRZ
+            function displayResult(data) {
+                let html = '<h3>Información extraída</h3>';
+                
+                html += '<table>';
+                for (const [key, value] of Object.entries(data.fields)) {
+                    html += `
+                        <tr>
+                            <td><strong>${key}:</strong></td>
+                            <td>${value || 'N/A'}</td>
+                        </tr>
+                    `;
+                }
+                html += '</table>';
+                
+                // Mostrar también los datos crudos para referencia
+                html += `
+                    <h4>Datos MRZ originales:</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+                resultDiv.innerHTML = html;
+                resultDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
