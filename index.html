@@ -1,187 +1,707 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extractor de Información MRZ</title>
-    <script src="https://cdn.jsdelivr.net/npm/mrz@4.2.1/lib/index.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-        }
-        .container {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .upload-section {
-            margin-bottom: 20px;
-            text-align: center;
-            padding: 20px;
-            border: 2px dashed #ccc;
-            border-radius: 5px;
-        }
-        #imagePreview {
-            max-width: 100%;
-            margin-top: 15px;
-            display: none;
-        }
-        #result {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #e8f4f8;
-            border-radius: 5px;
-            display: none;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 15px 0;
-        }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border-left-color: #09f;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Extractor de Información MRZ</h1>
-        <p>Sube una imagen que contenga líneas MRZ (como las de pasaportes o documentos de identidad) para extraer la información.</p>
-        
-        <div class="upload-section">
-            <input type="file" id="imageUpload" accept="image/*" capture="camera">
-            <button id="processBtn" disabled>Procesar Imagen</button>
-            <img id="imagePreview" alt="Vista previa de la imagen">
-        </div>
-        
-        <div class="loading">
-            <div class="spinner"></div>
-            <p>Procesando imagen...</p>
-        </div>
-        
-        <div id="result"></div>
-    </div>
+<html lang="en">
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const imageUpload = document.getElementById('imageUpload');
-            const imagePreview = document.getElementById('imagePreview');
-            const processBtn = document.getElementById('processBtn');
-            const resultDiv = document.getElementById('result');
-            const loadingDiv = document.querySelector('.loading');
-            
-            // Mostrar vista previa de la imagen
-            imageUpload.addEventListener('change', function(e) {
-                if (e.target.files.length === 0) return;
-                
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                
-                reader.onload = function(event) {
-                    imagePreview.src = event.target.result;
-                    imagePreview.style.display = 'block';
-                    processBtn.disabled = false;
-                };
-                
-                reader.readAsDataURL(file);
-            });
-            
-            // Procesar la imagen cuando se hace clic en el botón
-            processBtn.addEventListener('click', function() {
-                if (!imageUpload.files.length) return;
-                
-                loadingDiv.style.display = 'block';
-                resultDiv.style.display = 'none';
-                
-                const file = imageUpload.files[0];
-                
-                // Usar Tesseract.js para extraer texto de la imagen
-                Tesseract.recognize(
-                    file,
-                    'eng',
-                    { logger: m => console.log(m) }
-                ).then(({ data: { text } }) => {
-                    // Procesar el texto extraído para encontrar líneas MRZ
-                    const lines = text.split('\n')
-                        .map(line => line.trim())
-                        .filter(line => line.length > 10); // Filtrar líneas muy cortas
-                    
-                    // Intentar parsear las líneas como MRZ
-                    try {
-                        const parsed = mrz.parse(lines);
-                        displayResult(parsed);
-                    } catch (e) {
-                        // Si falla, mostrar el texto crudo para depuración
-                        resultDiv.innerHTML = `
-                            <h3>No se pudo parsear como MRZ válido</h3>
-                            <p>Texto extraído de la imagen:</p>
-                            <pre>${text}</pre>
-                            <p>Error: ${e.message}</p>
-                        `;
-                        resultDiv.style.display = 'block';
-                    }
-                }).finally(() => {
-                    loadingDiv.style.display = 'none';
-                });
-            });
-            
-            // Mostrar los resultados del parseo MRZ
-            function displayResult(data) {
-                let html = '<h3>Información extraída</h3>';
-                
-                html += '<table>';
-                for (const [key, value] of Object.entries(data.fields)) {
-                    html += `
-                        <tr>
-                            <td><strong>${key}:</strong></td>
-                            <td>${value || 'N/A'}</td>
-                        </tr>
-                    `;
-                }
-                html += '</table>';
-                
-                // Mostrar también los datos crudos para referencia
-                html += `
-                    <h4>Datos MRZ originales:</h4>
-                    <pre>${JSON.stringify(data, null, 2)}</pre>
-                `;
-                
-                resultDiv.innerHTML = html;
-                resultDiv.style.display = 'block';
-            }
-        });
-    </script>
+<head>
+  <meta charset="UTF-8">
+
+  <title>Ken&#39;s Street Fighter II with animated sprites</title>
+
+
+  <style>
+    /* fork this demo on github: 
+https://github.com/jkneb/street-fighter-css
+*/
+    /* A little more explanations on how it works 
+http://front-back.com/animate-png-sprites-with-css3-animations
+*/
+    /*
+All vendor prefixes are autogenerated by Autoprefixer
+*/
+    /* element who's going to receive this class will be mirrored */
+    .flip {
+      transform: scaleX(-1);
+    }
+
+    /* sprite tile dimensions */
+    /* ken */
+    .ken,
+    .fireball {
+      position: absolute;
+      bottom: 112px;
+      margin-left: 150px;
+      width: 70px;
+      height: 80px;
+      background-image: url("https://raw.githubusercontent.com/jkneb/street-fighter-css/master/images/ken.png");
+      /* other sprites preloading */
+    }
+
+    .ken:before,
+    .fireball:before {
+      content: "";
+      background: url("https://raw.githubusercontent.com/jkneb/street-fighter-css/master/images/ken-tatsumaki-senpuu-kyaku.png") no-repeat;
+    }
+
+    .ken:after,
+    .fireball:after {
+      content: "";
+      background: url("https://raw.githubusercontent.com/jkneb/street-fighter-css/master/images/ken-shoryuken.png") no-repeat;
+    }
+
+    /* ken's fireball */
+    .fireball {
+      position: absolute;
+      left: 100%;
+      bottom: 0px;
+      margin-left: 0;
+      /* default margin-left */
+      background-position: 140px 320px;
+      /* default background position */
+      transition: margin 8s linear;
+      /* triggering the movement with this class */
+      -webkit-animation: fireball steps(2) 0.15s infinite;
+      animation: fireball steps(2) 0.15s infinite;
+    }
+
+    .fireball:before {
+      left: 25px;
+      right: 25px;
+    }
+
+    .fireball.moving {
+      margin-left: 4000px;
+    }
+
+    @-webkit-keyframes fireball {
+      from {
+        background-position: 0px -320px;
+      }
+
+      to {
+        background-position: -140px -320px;
+      }
+    }
+
+    @keyframes fireball {
+      from {
+        background-position: 0px -320px;
+      }
+
+      to {
+        background-position: -140px -320px;
+      }
+    }
+
+    /* ken's fireball impact explosion */
+    .explode {
+      -webkit-animation: explode steps(4) 0.5s 1;
+      animation: explode steps(4) 0.5s 1;
+    }
+
+    @-webkit-keyframes explode {
+      from {
+        background-position: 0px -400px;
+      }
+
+      to {
+        background-position: -280px -400px;
+      }
+    }
+
+    @keyframes explode {
+      from {
+        background-position: 0px -400px;
+      }
+
+      to {
+        background-position: -280px -400px;
+      }
+    }
+
+    /* stance */
+    .stance {
+      -webkit-animation: stance steps(4) 0.5s infinite;
+      animation: stance steps(4) 0.5s infinite;
+    }
+
+    @-webkit-keyframes stance {
+      from {
+        background-position: 0px -80px;
+      }
+
+      to {
+        background-position: -280px -80px;
+      }
+    }
+
+    @keyframes stance {
+      from {
+        background-position: 0px -80px;
+      }
+
+      to {
+        background-position: -280px -80px;
+      }
+    }
+
+    /* hadoken - must be declared AFTER .stance */
+    .hadoken {
+      -webkit-animation: hadoken steps(4) 0.5s infinite;
+      animation: hadoken steps(4) 0.5s infinite;
+    }
+
+    @-webkit-keyframes hadoken {
+      from {
+        background-position: 0px 0px;
+      }
+
+      to {
+        background-position: -280px 0px;
+      }
+    }
+
+    @keyframes hadoken {
+      from {
+        background-position: 0px 0px;
+      }
+
+      to {
+        background-position: -280px 0px;
+      }
+    }
+
+    /* punch */
+    .punch {
+      -webkit-animation: punch steps(3) 0.15s infinite;
+      animation: punch steps(3) 0.15s infinite;
+    }
+
+    @-webkit-keyframes punch {
+      from {
+        background-position: 0px -160px;
+      }
+
+      to {
+        background-position: -210px -160px;
+      }
+    }
+
+    @keyframes punch {
+      from {
+        background-position: 0px -160px;
+      }
+
+      to {
+        background-position: -210px -160px;
+      }
+    }
+
+    /* walking */
+    .walk {
+      -webkit-animation: walk steps(5) 0.5s infinite;
+      animation: walk steps(5) 0.5s infinite;
+    }
+
+    @-webkit-keyframes walk {
+      from {
+        background-position: 0px -240px;
+      }
+
+      to {
+        background-position: -350px -240px;
+      }
+    }
+
+    @keyframes walk {
+      from {
+        background-position: 0px -240px;
+      }
+
+      to {
+        background-position: -350px -240px;
+      }
+    }
+
+    /* kick */
+    .kick {
+      -webkit-animation: kick steps(5) 0.5s infinite;
+      animation: kick steps(5) 0.5s infinite;
+    }
+
+    @-webkit-keyframes kick {
+      from {
+        background-position: 0px -480px;
+      }
+
+      to {
+        background-position: -350px -480px;
+      }
+    }
+
+    @keyframes kick {
+      from {
+        background-position: 0px -480px;
+      }
+
+      to {
+        background-position: -350px -480px;
+      }
+    }
+
+    /* reverse kick */
+    .reversekick {
+      -webkit-animation: reversekick steps(5) 0.5s infinite;
+      animation: reversekick steps(5) 0.5s infinite;
+    }
+
+    @-webkit-keyframes reversekick {
+      from {
+        background-position: 0px -560px;
+      }
+
+      to {
+        background-position: -350px -560px;
+      }
+    }
+
+    @keyframes reversekick {
+      from {
+        background-position: 0px -560px;
+      }
+
+      to {
+        background-position: -350px -560px;
+      }
+    }
+
+    /* kneel down */
+    .kneel {
+      -webkit-animation: kneel steps(1) 0.2s infinite;
+      animation: kneel steps(1) 0.2s infinite;
+    }
+
+    @-webkit-keyframes kneel {
+      from {
+        background-position: 0px -720px;
+      }
+
+      to {
+        background-position: -70px -720px;
+      }
+    }
+
+    @keyframes kneel {
+      from {
+        background-position: 0px -720px;
+      }
+
+      to {
+        background-position: -70px -720px;
+      }
+    }
+
+    /* jump */
+    .jump {
+      transition: bottom 0.5s cubic-bezier(0.99, 0.005, 0, 0.42);
+      bottom: 225px;
+      -webkit-animation: jump steps(7) 1s infinite;
+      animation: jump steps(7) 1s infinite;
+    }
+
+    .jump.down {
+      bottom: 112px;
+    }
+
+    @-webkit-keyframes jump {
+      from {
+        background-position: 0px -640px;
+      }
+
+      to {
+        background-position: -490px -640px;
+      }
+    }
+
+    @keyframes jump {
+      from {
+        background-position: 0px -640px;
+      }
+
+      to {
+        background-position: -490px -640px;
+      }
+    }
+
+    /* shoryuken */
+    .shoryuken {
+      height: 110px;
+      background-image: url("https://raw.githubusercontent.com/jkneb/street-fighter-css/master/images/ken-shoryuken.png");
+      transition: bottom 0.5s cubic-bezier(0.99, 0.005, 0, 0.42);
+      bottom: 225px;
+      -webkit-animation: shoryuken steps(7) 1s infinite;
+      animation: shoryuken steps(7) 1s infinite;
+    }
+
+    .shoryuken.down {
+      bottom: 112px;
+    }
+
+    @-webkit-keyframes shoryuken {
+      from {
+        background-position: 0px 0px;
+      }
+
+      to {
+        background-position: -490px 0px;
+      }
+    }
+
+    @keyframes shoryuken {
+      from {
+        background-position: 0px 0px;
+      }
+
+      to {
+        background-position: -490px 0px;
+      }
+    }
+
+    /* tatsumaki senpuu kyaku */
+    .tatsumaki {
+      height: 110px;
+      background-image: url("https://raw.githubusercontent.com/jkneb/street-fighter-css/master/images/ken-tatsumaki-senpuu-kyaku.png");
+      transition: bottom 0.2s cubic-bezier(0.99, 0.005, 0, 0.42);
+      bottom: 132px;
+      -webkit-animation: tatsumaki steps(13) 2s infinite;
+      animation: tatsumaki steps(13) 2s infinite;
+    }
+
+    .tatsumaki.down {
+      bottom: 112px;
+    }
+
+    @-webkit-keyframes tatsumaki {
+      from {
+        background-position: 0px 0px;
+      }
+
+      to {
+        background-position: -910px 0px;
+      }
+    }
+
+    @keyframes tatsumaki {
+      from {
+        background-position: 0px 0px;
+      }
+
+      to {
+        background-position: -910px 0px;
+      }
+    }
+
+    .commands {
+      margin-left: 450px;
+      font-size: 12px;
+      padding: 15px;
+    }
+
+    .commands h1 {
+      margin-top: 0;
+      font-size: 14px;
+    }
+
+    .commands i {
+      padding: 0px 4px;
+      font-style: normal;
+      font-weight: bold;
+      outline: 1px solid pink;
+    }
+
+    .commands button+button {
+      white-space: nowrap;
+    }
+
+    .stage {
+      position: absolute;
+      top: 0;
+      width: 450px;
+      height: 330px;
+      background: url("https://raw.githubusercontent.com/jkneb/street-fighter-css/master/images/bg2.jpg") no-repeat 0px -100px;
+      background-size: contain;
+      float: left;
+      margin-right: 20px;
+    }
+
+    body {
+      margin: 0px;
+      padding: 0;
+    }
+  </style>
+
+  <script>
+    window.console = window.console || function (t) {};
+  </script>
+
+
+</head>
+
+<body translate="no">
+  <div class="stage">
+    <div class="ken stance"></div>
+  </div>
+
+
+
+
+
+  <div class="commands">
+    <h1>Control Ken with ur keyboard</h1>
+
+    Punch: <button id="a">a</button><br>
+    Kick: <button id="z">z</button><br>
+    Reverse kick: <button id="e">e</button><br>
+    <br>
+    Tatsumaki: <button id="q">q</button><br>
+    Hadoken: <button id="s">s</button><br>
+    Shoryuken: <button id="d">d</button><br>
+    <br>
+    Jump: &nbsp;&nbsp;&nbsp;<button id="up">▲</button><br>
+    Walk: <button id="left">◀</button><button id="right">►</button><br>
+    Kneel: &nbsp;&nbsp;<button id="down">▼</button>
+  </div>
+  <script id="rendered-js">
+    var ken = document.querySelector('.ken');
+    var kenPos;
+
+    var punch = function () {
+      ken.classList.add('punch');
+      setTimeout(function () {
+        ken.classList.remove('punch');
+      }, 150);
+    };
+    var kick = function () {
+      ken.classList.add('kick');
+      setTimeout(function () {
+        ken.classList.remove('kick');
+      }, 500);
+    };
+    var rkick = function () {
+      ken.classList.add('reversekick');
+      setTimeout(function () {
+        ken.classList.remove('reversekick');
+      }, 500);
+    };
+    var tatsumaki = function () {
+      ken.classList.add('tatsumaki');
+      setTimeout(function () {
+        ken.classList.add('down');
+      }, 1500);
+      setTimeout(function () {
+        ken.classList.remove('tatsumaki', 'down');
+      }, 2000);
+    };
+    var hadoken = function () {
+      ken.classList.add('hadoken');
+      setTimeout(function () {
+        ken.classList.remove('hadoken');
+      }, 500);
+      setTimeout(function () {
+        var fireball = document.createElement('div');
+        fireball.className = 'fireball';
+        ken.appendChild(fireball);
+
+        var fireballPos;
+        var isFireballColision = function () {
+          fireballPos = fireball.getBoundingClientRect();
+          return fireballPos.left + 75 > window.innerWidth ? true : false;
+        };
+
+        var explodeIfColision = setInterval(function () {
+          if (isFireballColision()) {
+            fireball.classList.add('explode');
+            fireball.classList.remove('moving');
+            var currentMarginLeft = parseInt(fireball.style.marginLeft || '0');
+            fireball.style.marginLeft = (currentMarginLeft + 22) + 'px';
+            clearInterval(explodeIfColision);
+            setTimeout(function () {
+              fireball.remove();
+            }, 500);
+          }
+        }, 50);
+
+        setTimeout(function () {
+          fireball.classList.add('moving');
+        }, 20);
+
+        setTimeout(function () {
+          fireball.remove();
+          clearInterval(explodeIfColision);
+        }, 3020);
+
+      }, 250);
+    };
+    var shoryuken = function () {
+      ken.classList.add('shoryuken');
+      setTimeout(function () {
+        ken.classList.add('down');
+      }, 500);
+      setTimeout(function () {
+        ken.classList.remove('shoryuken', 'down');
+      }, 1000);
+    };
+    var jump = function () {
+      ken.classList.add('jump');
+      setTimeout(function () {
+        ken.classList.add('down');
+      }, 500);
+      setTimeout(function () {
+        ken.classList.remove('jump', 'down');
+      }, 1000);
+    };
+    var kneel = function () {
+      ken.classList.add('kneel');
+    };
+    var walkLeft = function () {
+      ken.classList.add('walk');
+      var currentMarginLeft = parseInt(ken.style.marginLeft || '150'); // Default margin-left
+      ken.style.marginLeft = (currentMarginLeft - 10) + 'px';
+    };
+    var walkRight = function () {
+      ken.classList.add('walk');
+      var currentMarginLeft = parseInt(ken.style.marginLeft || '150'); // Default margin-left
+      ken.style.marginLeft = (currentMarginLeft + 10) + 'px';
+    };
+
+    // on click events
+    document.getElementById('a').addEventListener('click', punch);
+    document.getElementById('z').addEventListener('click', kick);
+    document.getElementById('e').addEventListener('click', rkick);
+    document.getElementById('q').addEventListener('click', tatsumaki);
+    document.getElementById('s').addEventListener('click', hadoken);
+    document.getElementById('d').addEventListener('click', shoryuken);
+    document.getElementById('up').addEventListener('click', jump);
+    document.getElementById('down').addEventListener('mousedown', function (e) {
+      kneel();
+    });
+    document.getElementById('down').addEventListener('mouseup', function (e) {
+      ken.classList.remove('kneel');
+    });
+    document.getElementById('left').addEventListener('mousedown', function (e) {
+      walkLeft();
+    });
+    document.getElementById('left').addEventListener('mouseup', function (e) {
+      ken.classList.remove('walk');
+    });
+    document.getElementById('right').addEventListener('mousedown', function (e) {
+      walkRight();
+    });
+    document.getElementById('right').addEventListener('mouseup', function (e) {
+      ken.classList.remove('walk');
+    });
+
+    // on keydown events
+    document.addEventListener('keydown', function (e) {
+      // s - hadoken
+      if (e.keyCode == 83 &&
+        !ken.classList.contains('tatsumaki') &&
+        !ken.classList.contains('shoryuken') &&
+        !ken.classList.contains('hadoken') &&
+        !ken.classList.contains('punch') &&
+        !ken.classList.contains('kick') &&
+        !ken.classList.contains('reversekick')) {
+        hadoken();
+      }
+
+      // d - shoryuken
+      if (e.keyCode == 68 &&
+        !ken.classList.contains('tatsumaki') &&
+        !ken.classList.contains('shoryuken') &&
+        !ken.classList.contains('hadoken') &&
+        !ken.classList.contains('punch') &&
+        !ken.classList.contains('kick') &&
+        !ken.classList.contains('reversekick') &&
+        !ken.classList.contains('jump')) {
+        shoryuken();
+      }
+
+      // q - tatsumaki senpuu kyaku
+      if (e.keyCode == 81 &&
+        !ken.classList.contains('tatsumaki') &&
+        !ken.classList.contains('shoryuken') &&
+        !ken.classList.contains('hadoken') &&
+        !ken.classList.contains('punch') &&
+        !ken.classList.contains('kick') &&
+        !ken.classList.contains('reversekick') &&
+        !ken.classList.contains('jump')) {
+        tatsumaki();
+      }
+
+      // a - punch
+      if (e.keyCode == 65 &&
+        !ken.classList.contains('punch') &&
+        !ken.classList.contains('hadoken') &&
+        !ken.classList.contains('shoryuken') &&
+        !ken.classList.contains('tatsumaki')) {
+        punch();
+      }
+
+      // e - kick
+      if (e.keyCode == 90 &&
+        !ken.classList.contains('kick') &&
+        !ken.classList.contains('hadoken') &&
+        !ken.classList.contains('shoryuken') &&
+        !ken.classList.contains('tatsumaki')) {
+        kick();
+      }
+
+      // r - reverse kick
+      if (e.keyCode == 69 &&
+        !ken.classList.contains('reversekick') &&
+        !ken.classList.contains('kick') &&
+        !ken.classList.contains('hadoken') &&
+        !ken.classList.contains('shoryuken') &&
+        !ken.classList.contains('tatsumaki')) {
+        rkick();
+      }
+
+      // up - jump
+      if (e.keyCode == 38 &&
+        !ken.classList.contains('jump') &&
+        !ken.classList.contains('reversekick') &&
+        !ken.classList.contains('kick') &&
+        !ken.classList.contains('hadoken') &&
+        !ken.classList.contains('shoryuken') &&
+        !ken.classList.contains('tatsumaki')) {
+        jump();
+      }
+
+      // down - kneel
+      if (e.keyCode == 40 &&
+        !ken.classList.contains('kneel') &&
+        !ken.classList.contains('jump') &&
+        !ken.classList.contains('reversekick') &&
+        !ken.classList.contains('kick') &&
+        !ken.classList.contains('hadoken') &&
+        !ken.classList.contains('shoryuken') &&
+        !ken.classList.contains('tatsumaki')) {
+        kneel();
+      }
+
+      // ←← →→ walking
+      if (e.keyCode == 37) {
+        walkLeft();
+      }
+      if (e.keyCode == 39) {
+        walkRight();
+      }
+    });
+
+    document.addEventListener('keyup', function (e) {
+      ken.classList.remove('walk', 'kneel');
+    });
+  </script>
+
+
 </body>
+
 </html>
